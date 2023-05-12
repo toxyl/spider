@@ -60,11 +60,12 @@ func buildWebs() {
 	for _, port := range config.Ports {
 		srv := fmt.Sprintf("%s:%d", config.Host, port)
 
-		log.Default("Spider at %s builds web...", glog.Auto(port))
 		listener, err := net.Listen("tcp", srv)
 		if err != nil {
-			panic(err)
+			log.NotOK("Spider backs off, someone is already at %s...", glog.Auto(port))
+			continue
 		}
+		log.Default("Spider at %s builds web...", glog.Auto(port))
 		go func() {
 			for {
 				conn, err := listener.Accept()

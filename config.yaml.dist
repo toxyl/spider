@@ -1,7 +1,35 @@
 host: 0.0.0.0
 ports:
-  - 10000
-  - 20000
+  - 21 # FTP
+  - 22 # SSH
+  - 23 # Telnet
+  - 25 # SMTP
+  - 53 # DNS
+  - 80 # HTTP
+  - 110 # POP3
+  - 111 # RPCBIND
+  - 137 # NetBIOS
+  - 138 # NetBIOS
+  - 139 # NetBIOS
+  - 143 # IMAP
+  - 161 # SNMP
+  - 389 # LDAP
+  - 443 # HTTPS
+  - 445 # SMB
+  - 1025 # Microsoft Remote Procedure Call (RPC)
+  - 1194 # OpenVPN
+  - 1433 # Microsoft SQL Server
+  - 1723 # PPTP
+  - 2222 # DirectAdmin
+  - 3306 # MySQL
+  - 3389 # RDP
+  - 4433 # SaltStack
+  - 5060 # SIP
+  - 5432 # PostgresSQL
+  - 5901 # VNC
+  - 8000 # HTTP alt
+  - 8080 # HTTP alt
+  - 8443 # HTTPS alt
 whitelist:
   - 192.168.0.1 # router
   - 192.168.0.2 # some other service
