@@ -1,0 +1,13 @@
+#!/bin/bash
+if [ "$1" == "" ] ; then
+    echo "Usage: ./install-spider [username]@[host]"
+    exit 0
+fi
+DST=$1
+go build .
+ssh -q $DST -tt 'mkdir -p /etc/spider/'
+scp -C spider.service $DST:/etc/systemd/system/ || exit
+ssh -q $DST -tt 'systemctl enable spider.service'  || exit
+scp -C spider $DST:/etc/spider/ || exit
+scp -C config.yaml $DST:/etc/spider/config.yaml || exit
+ssh -q $DST -tt 'service spider start && journalctl -u spider.service -f --output cat'

@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ "$2" == "" ] ; then
+    echo "Usage: ./update-spider [username]@[host] [config]"
+    exit 0
+fi
+DST=$1
+go build .
+ssh -q $DST -tt 'service spider stop'  || exit
+scp -C spider $DST:/etc/spider/ || exit
+scp -C $2 $DST:/etc/spider/config.yaml || exit
+ssh -q $DST -tt 'service spider start'
