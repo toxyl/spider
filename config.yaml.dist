@@ -1,0 +1,11 @@
+host: 0.0.0.0
+ports:
+  - 10000
+  - 20000
+whitelist:
+  - 192.168.0.1 # router
+  - 192.168.0.2 # some other service
+taunts:
+  - "Your IP has been reported and you are being watched."
+  - "I see you!"
+attack_length: 10 # in seconds
