@@ -80,6 +80,7 @@ func attackPrey(conn net.Conn) {
 	}
 	connInfo(conn, "attacks")
 	stats.AddPrey(conn2spider(conn))
+	defer stats.AddKill(conn2spider(conn))
 
 	t := time.Now().Add(time.Duration(config.AttackLength) * time.Second)
 	connWrite(conn, conn2banner(conn)+"\n") // we first send a "proper" banner
@@ -102,7 +103,6 @@ func killPrey(conn net.Conn) {
 	connWrite(conn, "\n"+randomTaunt()+"\n")
 	time.Sleep(5 * time.Second)
 	conn.Close()
-	stats.AddKill(conn2spider(conn))
 }
 
 func catchPrey(conn net.Conn) {
