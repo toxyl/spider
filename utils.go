@@ -34,15 +34,15 @@ func ExtractHost(ipv4Addr string) string {
 	return ip
 }
 
-func ExtractPortFromAddr(addr net.Addr) int {
+func port(addr net.Addr) int {
 	return ExtractPort(addr.String())
 }
 
-func ExtractHostFromAddr(addr net.Addr) string {
+func host(addr net.Addr) string {
 	return ExtractHost(addr.String())
 }
 
-func GetRandomStringFromList(strings ...string) string {
+func randomStringFromList(strings ...string) string {
 	if len(strings) <= 0 {
 		return ""
 	}
@@ -77,15 +77,15 @@ func randomInt(min, max int) int {
 	return rand.Intn(n) + min
 }
 
-// GenerateGarbageString produces a string (length is randomly chosen between 1 and `n`)
+// garbageString produces a string (length is randomly chosen between 1 and `n`)
 // consisting of random (non)-printable characters.
-func GenerateGarbageString(n int) string {
+func garbageString(n int) string {
 	garbage := make([]byte, randomInt(1, n))
 	rand.Read(garbage)
 	return string(garbage)
 }
 
-func GetSpiderName(port int) string {
+func spider2name(port int) string {
 	for name, service := range *services {
 		for _, p := range service.Ports {
 			if p == port {
@@ -96,7 +96,7 @@ func GetSpiderName(port int) string {
 	return fmt.Sprintf("Port %d", port)
 }
 
-func GetSpiderBanner(port int) string {
+func banner(port int) string {
 	for _, service := range *services {
 		for _, p := range service.Ports {
 			if p == port {

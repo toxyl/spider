@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	Host         string   `yaml:"host"`
-	Ports        []int    `yaml:"ports"`
+	Spiders      []int    `yaml:"spiders"`
 	Taunts       []string `yaml:"taunts"`
 	Whitelist    []string `yaml:"whitelist"`
 	AttackLength int      `yaml:"attack_length"`
@@ -27,7 +27,7 @@ func LoadConfig(file string) (*Config, error) {
 	}
 	c := &Config{
 		Host:      "",
-		Ports:     []int{},
+		Spiders:   []int{},
 		Taunts:    []string{},
 		Whitelist: []string{},
 	}

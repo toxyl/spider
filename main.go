@@ -13,29 +13,82 @@ var (
 	log      = glog.NewLoggerSimple("Spider")
 	config   *Config
 	services *Services
+	stats    = NewStats()
 )
 
-func info(conn net.Conn, action string) {
-	log.Info("%s spider %s prey %s", glog.Auto(GetSpiderName(ExtractPortFromAddr(conn.LocalAddr()))), glog.Auto(action), glog.ConnRemote(conn, false))
+func conn2spider(conn net.Conn) int {
+	return port(conn.LocalAddr())
+}
+
+func conn2prey(conn net.Conn) string {
+	return host(conn.RemoteAddr())
+}
+
+func conn2banner(conn net.Conn) string {
+	return banner(conn2spider(conn))
+}
+
+func conn2name(conn net.Conn) string {
+	return spider2name(conn2spider(conn))
+}
+
+func connWrite(conn net.Conn, msg string) {
+	_, _ = conn.Write([]byte(msg))
+}
+
+func connInfo(conn net.Conn, action string) {
+	if action == "kills" {
+		action = glog.WrapRed(action)
+	} else if action == "attacks" {
+		action = glog.WrapOrange(action)
+	} else {
+		action = glog.Auto(action)
+	}
+	log.Info("%s spider %s prey %s", glog.Auto(conn2name(conn)), action, glog.Auto(conn2prey(conn)))
+}
+
+func colorizeAction(action string) string {
+	if action == "kills" {
+		action = glog.WrapRed(action)
+	} else if action == "attacks" {
+		action = glog.WrapOrange(action)
+	} else {
+		action = glog.Auto(action)
+	}
+	return action
+}
+
+func spiderInfo(spider int, action string, suffix string) {
+	log.Info("%s spider %s%s", glog.Auto(spider2name(spider)), colorizeAction(action), suffix)
+}
+
+func spiderNotOK(spider int, action string, suffix string) {
+	log.NotOK("%s spider %s%s", glog.Auto(spider2name(spider)), colorizeAction(action), suffix)
+}
+
+func spiderOK(spider int, action string, suffix string) {
+	log.OK("%s spider %s%s", glog.Auto(spider2name(spider)), colorizeAction(action), suffix)
 }
 
 func randomTaunt() string {
-	return GetRandomStringFromList(config.Taunts...)
+	return randomStringFromList(config.Taunts...)
 }
 
 func attackPrey(conn net.Conn) {
 	if conn == nil {
 		return
 	}
-	info(conn, "attacks")
+	connInfo(conn, "attacks")
+	stats.AddPrey(conn2spider(conn))
+
 	t := time.Now().Add(time.Duration(config.AttackLength) * time.Second)
-	_, _ = conn.Write([]byte(GetSpiderBanner(ExtractPortFromAddr(conn.LocalAddr())) + "\n")) // we first send a "proper" banner
-	time.Sleep(5 * time.Second)                                                              // and then sleep a bit so our target has some time to process the banner
+	connWrite(conn, conn2banner(conn)+"\n") // we first send a "proper" banner
+	time.Sleep(5 * time.Second)             // and then sleep a bit so our target has some time to process the banner
 	for t.After(time.Now()) {
 		if conn == nil {
 			break
 		}
-		_, _ = conn.Write([]byte(GenerateGarbageString(randomInt(100, 10000))))
+		connWrite(conn, garbageString(10000))
 		time.Sleep(time.Duration(randomInt(1, 5)) * time.Second)
 	}
 }
@@ -45,10 +98,11 @@ func killPrey(conn net.Conn) {
 		return
 	}
 
-	info(conn, "kills")
-	_, _ = conn.Write([]byte("\n" + randomTaunt() + "\n"))
+	connInfo(conn, "kills")
+	connWrite(conn, "\n"+randomTaunt()+"\n")
 	time.Sleep(5 * time.Second)
 	conn.Close()
+	stats.AddKill(conn2spider(conn))
 }
 
 func catchPrey(conn net.Conn) {
@@ -57,25 +111,26 @@ func catchPrey(conn net.Conn) {
 }
 
 func buildWebs() {
-	for _, port := range config.Ports {
-		srv := fmt.Sprintf("%s:%d", config.Host, port)
+	for _, spider := range config.Spiders {
+		srv := fmt.Sprintf("%s:%d", config.Host, spider)
 
 		listener, err := net.Listen("tcp", srv)
 		if err != nil {
-			log.NotOK("%s spider backs off, someone is already there...", glog.Auto(GetSpiderName(port)))
+			spiderNotOK(spider, "backs off", "someone is already there...")
 			continue
 		}
-		log.Default("%s spider builds web...", glog.Auto(GetSpiderName(port)))
+		spiderInfo(spider, "builds", " web...")
+		stats.AddSpider(spider)
 		go func() {
 			for {
 				conn, err := listener.Accept()
 				if err != nil {
-					info(conn, "fails to catch")
+					connInfo(conn, "fails to catch")
 					log.Error("%s", glog.Error(err))
 					conn.Close()
 					continue
 				}
-				host := ExtractHostFromAddr(conn.RemoteAddr())
+				host := host(conn.RemoteAddr())
 				isWhitelisted := false
 				for _, wl := range config.Whitelist {
 					if host == wl {
@@ -84,7 +139,7 @@ func buildWebs() {
 					}
 				}
 				if isWhitelisted {
-					info(conn, "avoids")
+					connInfo(conn, "avoids")
 					conn.Close()
 					continue
 				}
@@ -121,6 +176,7 @@ func main() {
 	buildWebs()
 
 	for {
-		time.Sleep(15 * time.Second) // to keep the application open
+		stats.Print()
+		time.Sleep(1 * time.Minute)
 	}
 }
