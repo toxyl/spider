@@ -73,20 +73,30 @@ func (s *Stats) Print() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	busy := []string{}
 	starving := []string{}
+	waiting := []string{}
 	for spider, kills := range s.Kills {
 		s.lock.Unlock()
 		isStarving := s.IsStarving(spider)
 		s.lock.Lock()
 		if isStarving {
 			starving = append(starving, glog.Highlight(fmt.Sprint(spider)))
-		} else {
-			if kills > 0 {
-				spiderOK(spider, "is well-fed", ", has "+glog.IntAmount(kills, "kill", "kills")+".")
-			}
+		} else if _, ok := s.Prey[spider]; ok {
+			busy = append(busy, glog.Highlight(fmt.Sprint(spider)))
+		} else if kills > 0 {
+			waiting = append(waiting, glog.Highlight(fmt.Sprint(spider))+" ("+glog.IntAmount(kills, "kill", "kills")+")")
 		}
 	}
-	log.NotOK("Starving spiders: %s", glog.Auto(starving))
+	if len(waiting) > 0 {
+		log.OK("Spiders waiting: %s", glog.Auto(waiting))
+	}
+	if len(busy) > 0 {
+		log.Success("Spiders busy: %s", glog.Auto(busy))
+	}
+	if len(starving) > 0 {
+		log.NotOK("Spiders starving: %s", glog.Auto(starving))
+	}
 }
 
 func NewStats() *Stats {
