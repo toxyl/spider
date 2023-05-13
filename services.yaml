@@ -36,7 +36,7 @@ Elasticsearch:
 ## F 
 FTP:
   ports: [ 21 ]
-  banner: 220 tapeworm FTP Server Ready
+  banner: 220 [tapeworm,bookworm,[str:12],[mix:12]] FTP Server Ready
 FTPS:
   ports: [ 990 ]
   banner: 220 FTPS server ready
@@ -63,7 +63,7 @@ LDAP:
   banner: 220-OpenLDAP
 LDAP-over-SSL:
   ports: [ 636 ]
-  banner: 0x55 0x53 0x45 0x52 0x20 0x43 0x6f 0x6d
+  banner: "0x55 0x53 0x45 0x52 0x20 0x43 0x6f 0x[int:1]d"
 
 ## M 
 Matrix:
@@ -89,7 +89,7 @@ MQTT:
   banner: MQTT
 MySQL:
   ports: [ 3306 ]
-  banner: 5.7.30-0ubuntu0.18.04.1
+  banner: "[int:1].[int:1].[int:2]-0ubuntu0.18.04.1"
 
 ## N 
 NETBIOS:
@@ -102,15 +102,15 @@ NTP:
 ## O 
 OpenVPN:
   ports: [ 1194 ]
-  banner: OpenVPN
+  banner: "[OpenVPN,ClosedVPN]"
 
 ## P 
 POP3:
   ports: [ 110 ]
-  banner: +OK Microsoft Exchange Server 2007 POP3 server ready
+  banner: "+OK Microsoft Exchange Server 200[int:1] POP3 server ready"
 Postfix:
   ports: [ 587 ]
-  banner: 220 mail.example.com ESMTP
+  banner: "220 mail.[tapeworm,bookworm,[str:12],[mix:12]].[f.u,not.here,go.away] ESMTP"
 PostgresSQL:
   ports: [ 5432 ]
   banner: PostgreSQL
@@ -121,7 +121,7 @@ PPTP:
 ## R 
 RDP:
   ports: [ 3389 ]
-  banner: \x03\x00\x00\x0b\x06\xd0\x00\x00\x124\x00
+  banner: "\\x03\\x00\\x00\x0b\\x06\xd0\\x00\\x00\\x[0-255]\\x00"
 Redis:
   ports: [ 6379 ]
   banner: Redis
@@ -133,7 +133,7 @@ RPC:
   banner: -ERR unsupported command ''
 Rsync:
   ports: [ 873 ]
-  banner: "@RSYNCD: 31.0"
+  banner: "@RSYNCD: [1-32].0"
 
 ## S 
 SaltStack:
@@ -141,16 +141,16 @@ SaltStack:
   banner: salt
 SIP:
   ports: [ 5060 ]
-  banner: SIP/2.0 200 OK
+  banner: "SIP/[int:1].0 200 OK"
 SMB:
   ports: [ 445 ]
   banner: Windows for Workgroups
 SMTP:
   ports: [ 25 ]
-  banner: 220 tapeworm ESMTP Postfix
+  banner: 220 [tapeworm,bookworm,[str:12],[mix:12]] ESMTP Postfix
 SMTPS:
   ports: [ 465 ]
-  banner: 220 mail.example.com ESMTP
+  banner: 220 mail.[tapeworm,bookworm,[str:12],[mix:12]].[f.u,not.here,go.away] ESMTP
 SNMP:
   ports: [ 161 ]
   banner: SNMP
@@ -165,12 +165,12 @@ Splunk:
   banner: Splunk
 SSH:
   ports: [ 22 ]
-  banner: SSH-2.0-OpenSSH_7.12"
+  banner: "SSH-2.0-OpenSSH_[int:1].[int:2]"
 
 ## T 
 Telnet:
   ports: [ 23 ]
-  banner: 220 tapeworm Telnet
+  banner: 220 [tapeworm,bookworm,[str:12],[mix:12]] Telnet
 TFTP:
   ports: [ 69 ]
   banner: TFTP
@@ -178,7 +178,7 @@ TFTP:
 ## V 
 VNC:
   ports: [ 5900, 5901 ]
-  banner: RFB 003.008
+  banner: "RFB [int:3].[int:3]"
 VRRP:
   ports: [ 112 ]
   banner: VRRP 

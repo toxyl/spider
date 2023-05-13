@@ -8,11 +8,18 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/toxyl/glog"
+	gostringgenerator "github.com/toxyl/go-string-generator"
 )
 
-// ExtractPort takes a "IP:Port" formatted string and returns the port as integer.
+var (
+	gen = gostringgenerator.NewGenerator("/etc/spider/data/", func(err error) {})
+)
+
+// extractPort takes a "IP:Port" formatted string and returns the port as integer.
 // If extraction fails the function returns 0.
-func ExtractPort(ipv4Addr string) int {
+func extractPort(ipv4Addr string) int {
 	_, port, err := net.SplitHostPort(ipv4Addr)
 	if err != nil {
 		return 0
@@ -24,9 +31,9 @@ func ExtractPort(ipv4Addr string) int {
 	return p
 }
 
-// ExtractHost takes a "IP:Port" formatted string and returns the ip portion.
+// extractHost takes a "IP:Port" formatted string and returns the ip portion.
 // If extraction fails the function returns an empty string.
-func ExtractHost(ipv4Addr string) string {
+func extractHost(ipv4Addr string) string {
 	ip, _, err := net.SplitHostPort(ipv4Addr)
 	if err != nil {
 		return ""
@@ -35,11 +42,11 @@ func ExtractHost(ipv4Addr string) string {
 }
 
 func port(addr net.Addr) int {
-	return ExtractPort(addr.String())
+	return extractPort(addr.String())
 }
 
 func host(addr net.Addr) string {
-	return ExtractHost(addr.String())
+	return extractHost(addr.String())
 }
 
 func randomStringFromList(strings ...string) string {
@@ -58,14 +65,6 @@ func fileExists(path string) bool {
 	defer file.Close()
 	_, err = file.Stat()
 	return err == nil
-}
-
-func StringToInt(s string, defaultValue int) int {
-	i, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		i = int64(defaultValue)
-	}
-	return int(i)
 }
 
 func randomInt(min, max int) int {
@@ -100,9 +99,41 @@ func banner(port int) string {
 	for _, service := range *services {
 		for _, p := range service.Ports {
 			if p == port {
-				return service.Banner
+				return gen.Generate(service.Banner)
 			}
 		}
 	}
 	return base64.RawStdEncoding.EncodeToString([]byte(randomTaunt()))
+}
+
+func conn2spider(conn net.Conn) int {
+	return port(conn.LocalAddr())
+}
+
+func conn2prey(conn net.Conn) string {
+	return host(conn.RemoteAddr())
+}
+
+func conn2banner(conn net.Conn) string {
+	return banner(conn2spider(conn))
+}
+
+func conn2name(conn net.Conn) string {
+	return spider2name(conn2spider(conn))
+}
+
+func connWrite(conn net.Conn, msg string) error {
+	_, err := conn.Write([]byte(msg))
+	return err
+}
+
+func colorizeAction(action string) string {
+	if action == "kills" {
+		action = glog.WrapRed(action)
+	} else if action == "attacks" {
+		action = glog.WrapOrange(action)
+	} else {
+		action = glog.Auto(action)
+	}
+	return action
 }

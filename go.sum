@@ -1,5 +1,9 @@
+github.com/radovskyb/watcher v1.0.7 h1:AYePLih6dpmS32vlHfhCeli8127LzkIgwJGcwwe8tUE=
+github.com/radovskyb/watcher v1.0.7/go.mod h1:78okwvY5wPdzcb1UYnip1pvrZNIVEIh/Cm+ZuvsUYIg=
 github.com/toxyl/glog v1.0.0-alpha.4 h1:up4q/92TQqzMB5zPm22b+asupQi8Qnfbs1VE1QBpDNI=
 github.com/toxyl/glog v1.0.0-alpha.4/go.mod h1:9O3jnsSIofADRdzJ+7LN17N+NcmaoTSJvCsbFOQFjN8=
+github.com/toxyl/go-string-generator v1.0.0 h1:oBhp6FAvv11NrCgzCP65fdNbnvEkr+MuylKik+40i3E=
+github.com/toxyl/go-string-generator v1.0.0/go.mod h1:rHqL9oJjAHNcOta81lvjJSy8oHhxjEHRROAH47h/wSY=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=

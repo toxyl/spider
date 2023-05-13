@@ -16,46 +16,8 @@ var (
 	stats    = NewStats()
 )
 
-func conn2spider(conn net.Conn) int {
-	return port(conn.LocalAddr())
-}
-
-func conn2prey(conn net.Conn) string {
-	return host(conn.RemoteAddr())
-}
-
-func conn2banner(conn net.Conn) string {
-	return banner(conn2spider(conn))
-}
-
-func conn2name(conn net.Conn) string {
-	return spider2name(conn2spider(conn))
-}
-
-func connWrite(conn net.Conn, msg string) {
-	_, _ = conn.Write([]byte(msg))
-}
-
 func connInfo(conn net.Conn, action string) {
-	if action == "kills" {
-		action = glog.WrapRed(action)
-	} else if action == "attacks" {
-		action = glog.WrapOrange(action)
-	} else {
-		action = glog.Auto(action)
-	}
-	log.Info("%s spider %s prey %s", glog.Auto(conn2name(conn)), action, glog.Auto(conn2prey(conn)))
-}
-
-func colorizeAction(action string) string {
-	if action == "kills" {
-		action = glog.WrapRed(action)
-	} else if action == "attacks" {
-		action = glog.WrapOrange(action)
-	} else {
-		action = glog.Auto(action)
-	}
-	return action
+	log.Info("%s spider %s prey %s", glog.Auto(conn2name(conn)), colorizeAction(action), glog.Auto(conn2prey(conn)))
 }
 
 func spiderInfo(spider int, action string, suffix string) {
@@ -66,48 +28,51 @@ func spiderNotOK(spider int, action string, suffix string) {
 	log.NotOK("%s spider %s%s", glog.Auto(spider2name(spider)), colorizeAction(action), suffix)
 }
 
-func spiderOK(spider int, action string, suffix string) {
-	log.OK("%s spider %s%s", glog.Auto(spider2name(spider)), colorizeAction(action), suffix)
-}
-
 func randomTaunt() string {
-	return randomStringFromList(config.Taunts...)
+	return gen.Generate(randomStringFromList(config.Taunts...))
 }
 
 func attackPrey(conn net.Conn) {
-	if conn == nil {
+	t := time.Now().Add(time.Duration(config.AttackLength) * time.Second)
+	err := connWrite(conn, conn2banner(conn)+"\n") // we first send a "proper" banner
+	if err != nil {
 		return
 	}
-	connInfo(conn, "attacks")
-	stats.AddPrey(conn2spider(conn))
-	defer stats.AddKill(conn2spider(conn))
-
-	t := time.Now().Add(time.Duration(config.AttackLength) * time.Second)
-	connWrite(conn, conn2banner(conn)+"\n") // we first send a "proper" banner
-	time.Sleep(5 * time.Second)             // and then sleep a bit so our target has some time to process the banner
+	time.Sleep(5 * time.Second) // and then sleep a bit so our target has some time to process the banner
 	for t.After(time.Now()) {
 		if conn == nil {
 			break
 		}
-		connWrite(conn, garbageString(10000))
+		err = connWrite(conn, garbageString(10000))
+		if err != nil {
+			return
+		}
 		time.Sleep(time.Duration(randomInt(1, 5)) * time.Second)
 	}
 }
 
 func killPrey(conn net.Conn) {
-	if conn == nil {
+	err := connWrite(conn, "\n"+randomTaunt()+"\n")
+	if err != nil {
 		return
 	}
-
-	connInfo(conn, "kills")
-	connWrite(conn, "\n"+randomTaunt()+"\n")
 	time.Sleep(5 * time.Second)
 	conn.Close()
 }
 
 func catchPrey(conn net.Conn) {
+	if conn == nil {
+		return
+	}
+	spider := conn2spider(conn)
+	connInfo(conn, "attacks")
+	stats.AddPrey(spider)
+	defer func() {
+		connInfo(conn, "kills")
+		killPrey(conn)
+		stats.AddKill(spider)
+	}()
 	attackPrey(conn)
-	killPrey(conn)
 }
 
 func buildWebs() {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -9,10 +10,11 @@ import (
 )
 
 type Stats struct {
-	lock     *sync.Mutex
-	LastKill map[int]time.Time
-	Kills    map[int]int
-	Prey     map[int]int
+	lock                  *sync.Mutex
+	LastKill              map[int]time.Time
+	Kills                 map[int]int
+	Prey                  map[int]int
+	changedSinceLastPrint bool
 }
 
 func (s *Stats) AddSpider(spider int) {
@@ -25,6 +27,7 @@ func (s *Stats) AddSpider(spider int) {
 func (s *Stats) AddKill(spider int) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+	s.changedSinceLastPrint = true
 
 	if _, ok := s.Kills[spider]; !ok {
 		s.Kills[spider] = 0
@@ -41,6 +44,7 @@ func (s *Stats) AddKill(spider int) {
 func (s *Stats) AddPrey(spider int) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+	s.changedSinceLastPrint = true
 
 	if _, ok := s.Prey[spider]; !ok {
 		s.Prey[spider] = 0
@@ -72,43 +76,77 @@ func (s *Stats) IsStarving(spider int) bool {
 func (s *Stats) Print() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+	if !s.changedSinceLastPrint {
+		return // no need to print again
+	}
 
-	busy := []string{}
-	starving := []string{}
-	waiting := []string{}
-	for spider, kills := range s.Kills {
+	spiders := []int{}
+	for spider := range s.Kills {
+		spiders = append(spiders, spider)
+	}
+	sort.Ints(spiders)
+	var (
+		totalKills    = 0
+		totalPrey     = 0
+		totalBusy     = 0
+		totalWaiting  = 0
+		totalStarving = 0
+		colSpider     = glog.NewTableColumnRight("Spider")
+		colBusy       = glog.NewTableColumnCenter("Busy")
+		colWaiting    = glog.NewTableColumnCenter("Waiting")
+		colStarving   = glog.NewTableColumnCenter("Starving")
+		colPrey       = glog.NewTableColumnRight("Prey 🪰")
+		colKills      = glog.NewTableColumnRight("Kills 💀")
+	)
+
+	for _, spider := range spiders {
 		s.lock.Unlock()
 		isStarving := s.IsStarving(spider)
 		s.lock.Lock()
+		kills := s.Kills[spider]
+		prey := s.Prey[spider]
+		isBusy := prey > 0
+		isWaiting := prey == 0 && !isStarving
+
+		colSpider.Push(glog.Highlight(fmt.Sprint(spider)))
+		colBusy.Push(isBusy)
+		colWaiting.Push(isWaiting)
+		colStarving.Push(isStarving)
+		colPrey.Push(prey)
+		colKills.Push(kills)
+
+		totalPrey += prey
+		totalKills += kills
+		if isBusy {
+			totalBusy++
+		}
+		if isWaiting {
+			totalWaiting++
+		}
 		if isStarving {
-			str := glog.Highlight(fmt.Sprint(spider))
-			if kills > 0 {
-				str += " (" + glog.IntAmount(kills, "kill", "kills") + ")"
-			}
-			starving = append(starving, str)
-		} else if prey, ok := s.Prey[spider]; ok && prey > 0 {
-			busy = append(busy, glog.Highlight(fmt.Sprint(spider))+" ("+glog.IntAmount(prey, "prey", "prey")+")")
-		} else if kills > 0 {
-			waiting = append(waiting, glog.Highlight(fmt.Sprint(spider))+" ("+glog.IntAmount(kills, "kill", "kills")+")")
+			totalStarving++
 		}
 	}
-	if len(waiting) > 0 {
-		log.OK("Spiders waiting: %s", glog.Auto(waiting))
-	}
-	if len(busy) > 0 {
-		log.Success("Spiders busy: %s", glog.Auto(busy))
-	}
-	if len(starving) > 0 {
-		log.NotOK("Spiders starving: %s", glog.Auto(starving))
-	}
+
+	colSpider.Push(glog.Highlight("Total"))
+	colBusy.Push(totalBusy)
+	colWaiting.Push(totalWaiting)
+	colStarving.Push(totalStarving)
+	colPrey.Push(totalPrey)
+	colKills.Push(totalKills)
+	glog.LoggerConfig.ShowIndicator = false
+	log.Table(colSpider, colBusy, colWaiting, colStarving, colPrey, colKills)
+	glog.LoggerConfig.ShowIndicator = true
+	s.changedSinceLastPrint = false
 }
 
 func NewStats() *Stats {
 	s := &Stats{
-		lock:     &sync.Mutex{},
-		LastKill: map[int]time.Time{},
-		Kills:    map[int]int{},
-		Prey:     map[int]int{},
+		lock:                  &sync.Mutex{},
+		LastKill:              map[int]time.Time{},
+		Kills:                 map[int]int{},
+		Prey:                  map[int]int{},
+		changedSinceLastPrint: false,
 	}
 	return s
 }

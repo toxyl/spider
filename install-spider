@@ -9,6 +9,7 @@ scp -C spider $DST:/tmp/ || exit
 scp -C $2 $DST:/tmp/config.yaml || exit
 scp -C spider.service $DST:/tmp/ || exit
 ssh -q $DST -tt 'sudo mkdir -p /etc/spider/'
+ssh -q $DST -tt 'sudo mkdir -p /etc/spider/data/'
 ssh -q $DST -tt 'sudo cp /tmp/spider /etc/spider/spider' || exit
 ssh -q $DST -tt 'sudo cp /tmp/config.yaml /etc/spider/config.yaml' || exit
 ssh -q $DST -tt 'sudo cp /tmp/spider.service /etc/systemd/system/spider.service' || exit
