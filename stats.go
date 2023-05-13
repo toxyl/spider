@@ -81,9 +81,9 @@ func (s *Stats) Print() {
 		isStarving := s.IsStarving(spider)
 		s.lock.Lock()
 		if isStarving {
-			starving = append(starving, glog.Highlight(fmt.Sprint(spider)))
-		} else if _, ok := s.Prey[spider]; ok {
-			busy = append(busy, glog.Highlight(fmt.Sprint(spider)))
+			starving = append(starving, glog.Highlight(fmt.Sprint(spider))+" ("+glog.IntAmount(kills, "kill", "kills")+")")
+		} else if prey, ok := s.Prey[spider]; ok {
+			busy = append(busy, glog.Highlight(fmt.Sprint(spider))+" ("+glog.IntAmount(prey, "prey", "prey")+")")
 		} else if kills > 0 {
 			waiting = append(waiting, glog.Highlight(fmt.Sprint(spider))+" ("+glog.IntAmount(kills, "kill", "kills")+")")
 		}

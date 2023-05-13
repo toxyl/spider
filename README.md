@@ -62,3 +62,8 @@ Defines how long Spider keeps attacking before killing its prey.
 attack_length: 10
 ```
 During this time (given in seconds), Spider sends random-length chunks of garbage data interleaved with random-length periods of inactivity, just like a real spider slowly devouring its prey.
+
+## Disclaimer
+Please note that Spider is provided "as is" and without warranty of any kind, either express or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. The author(s) of Spider shall not be held liable for any damages arising from the use of this software, including, but not limited to, any direct, indirect, special, incidental, or consequential damages arising out of the use or inability to use this software (including, but not limited to, damages for loss of profits, business interruption, loss of data, or any other financial loss).
+
+Please use Spider at your own risk, and be aware that there may be bugs or other issues that could cause unintended damage. While the author(s) have made every effort to ensure that the software is technically correct, they cannot guarantee its accuracy or reliability in all circumstances. If you encounter any problems while using Spider, please report them on the GitHub Issues page so that they can be addressed.
