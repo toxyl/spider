@@ -24,12 +24,6 @@ DirectAdmin:
 DNS:
   ports: [ 53 ]
   banner: BIND
-DNS-over-HTTPS:
-  ports: [ 443 ]
-  banner: GET /dns-query HTTP/1.1
-DNSCrypt:
-  ports: [ 8443 ]
-  banner: GET /dns-query HTTP/1.1
 Docker:
   ports: [ 2375, 2376 ]
   banner: HTTP/1.1 404 Not Found
@@ -62,9 +56,6 @@ IKEv2:
 IMAP:
   ports: [ 143 ]
   banner: "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE STARTTLS AUTH=PLAIN AUTH=LOGIN] Dovecot ready."
-IPsec NAT-T:
-  ports: [ 4500 ]
-  banner: Nonce payload notification
 
 ## L 
 LDAP:
@@ -104,9 +95,6 @@ MySQL:
 NETBIOS:
   ports: [ 137, 138, 139 ]
   banner: NBTSTAT
-NFS:
-  ports: [ 111 ]
-  banner: NFS
 NTP:
   ports: [ 123 ]
   banner: NTP
@@ -155,7 +143,7 @@ SIP:
   ports: [ 5060 ]
   banner: SIP/2.0 200 OK
 SMB:
-  ports: [ 139, 445 ]
+  ports: [ 445 ]
   banner: Windows for Workgroups
 SMTP:
   ports: [ 25 ]
