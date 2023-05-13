@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -31,6 +32,23 @@ func LoadConfig(file string) (*Config, error) {
 		Whitelist: []string{},
 	}
 	b, err := os.ReadFile(file)
-	yaml.Unmarshal(b, c)
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(b, c)
 	return c, err
+}
+
+//go:embed services.yaml
+var servicesFile string
+
+type Services map[string]struct {
+	Ports  []int  `yaml:"ports"`
+	Banner string `yaml:"banner"`
+}
+
+func LoadServices() (*Services, error) {
+	s := &Services{}
+	err := yaml.Unmarshal([]byte(servicesFile), s)
+	return s, err
 }

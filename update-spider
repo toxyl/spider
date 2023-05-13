@@ -5,7 +5,9 @@ if [ "$2" == "" ] ; then
 fi
 DST=$1
 go build .
-ssh -q $DST -tt 'service spider stop'  || exit
-scp -C spider $DST:/etc/spider/ || exit
-scp -C $2 $DST:/etc/spider/config.yaml || exit
-ssh -q $DST -tt 'service spider start'
+ssh -q $DST -tt 'sudo service spider stop'  || exit
+scp -C spider $DST:/tmp/ || exit
+scp -C $2 $DST:/tmp/config.yaml || exit
+ssh -q $DST -tt 'sudo cp /tmp/spider /etc/spider/spider' || exit
+ssh -q $DST -tt 'sudo cp /tmp/config.yaml /etc/spider/config.yaml' || exit
+ssh -q $DST -tt 'sudo service spider start'

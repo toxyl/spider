@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/base64"
+	"fmt"
 	"math/rand"
 	"net"
 	"os"
@@ -81,4 +83,26 @@ func GenerateGarbageString(n int) string {
 	garbage := make([]byte, randomInt(1, n))
 	rand.Read(garbage)
 	return string(garbage)
+}
+
+func GetSpiderName(port int) string {
+	for name, service := range *services {
+		for _, p := range service.Ports {
+			if p == port {
+				return fmt.Sprintf("%s (%d)", name, port)
+			}
+		}
+	}
+	return fmt.Sprintf("Port %d", port)
+}
+
+func GetSpiderBanner(port int) string {
+	for _, service := range *services {
+		for _, p := range service.Ports {
+			if p == port {
+				return service.Banner
+			}
+		}
+	}
+	return base64.RawStdEncoding.EncodeToString([]byte(randomTaunt()))
 }

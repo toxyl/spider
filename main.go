@@ -10,12 +10,13 @@ import (
 )
 
 var (
-	log    = glog.NewLoggerSimple("Spider")
-	config *Config
+	log      = glog.NewLoggerSimple("Spider")
+	config   *Config
+	services *Services
 )
 
 func info(conn net.Conn, action string) {
-	log.Info("Spider at %s %s prey %s", glog.Int(ExtractPortFromAddr(conn.LocalAddr())), glog.Auto(action), glog.ConnRemote(conn, false))
+	log.Info("%s spider %s prey %s", glog.Auto(GetSpiderName(ExtractPortFromAddr(conn.LocalAddr()))), glog.Auto(action), glog.ConnRemote(conn, false))
 }
 
 func randomTaunt() string {
@@ -27,16 +28,15 @@ func attackPrey(conn net.Conn) {
 		return
 	}
 	info(conn, "attacks")
-	n := 0
-	attack := true
 	t := time.Now().Add(time.Duration(config.AttackLength) * time.Second)
-	for attack {
+	_, _ = conn.Write([]byte(GetSpiderBanner(ExtractPortFromAddr(conn.LocalAddr())) + "\n")) // we first send a "proper" banner
+	time.Sleep(5 * time.Second)                                                              // and then sleep a bit so our target has some time to process the banner
+	for t.After(time.Now()) {
 		if conn == nil {
 			break
 		}
-		n = randomInt(100, 1000)
-		_, _ = conn.Write([]byte(GenerateGarbageString(n)))
-		attack = t.After(time.Now()) || n%7 != 0 || n%5 != 0
+		_, _ = conn.Write([]byte(GenerateGarbageString(randomInt(100, 10000))))
+		time.Sleep(time.Duration(randomInt(1, 5)) * time.Second)
 	}
 }
 
@@ -62,10 +62,10 @@ func buildWebs() {
 
 		listener, err := net.Listen("tcp", srv)
 		if err != nil {
-			log.NotOK("Spider backs off, someone is already at %s...", glog.Auto(port))
+			log.NotOK("%s spider backs off, someone is already there...", glog.Auto(GetSpiderName(port)))
 			continue
 		}
-		log.Default("Spider at %s builds web...", glog.Auto(port))
+		log.Default("%s spider builds web...", glog.Auto(GetSpiderName(port)))
 		go func() {
 			for {
 				conn, err := listener.Accept()
@@ -105,6 +105,12 @@ func main() {
 		fmt.Println("Usage: spider [config file]")
 		return
 	}
+
+	s, err := LoadServices()
+	if err != nil {
+		log.Error("Failed to load services: %s", glog.Error(err))
+	}
+	services = s
 
 	c, err := LoadConfig(os.Args[1])
 	if err != nil {
