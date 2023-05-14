@@ -57,6 +57,10 @@ func randomStringFromList(strings ...string) string {
 	return strings[i]
 }
 
+func randomLinebreak() string {
+	return randomStringFromList("\r\n", "\r", "\n")
+}
+
 func fileExists(path string) bool {
 	file, err := os.Open(path)
 	if err != nil {
@@ -132,6 +136,8 @@ func colorizeAction(action string) string {
 		action = glog.WrapRed(action)
 	} else if action == "attacks" {
 		action = glog.WrapOrange(action)
+	} else if action == "pokes" {
+		action = glog.WrapYellow(action)
 	} else {
 		action = glog.Auto(action)
 	}
