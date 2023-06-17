@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,15 +14,20 @@ type Config struct {
 	Taunts       []string `yaml:"taunts"`
 	Whitelist    []string `yaml:"whitelist"`
 	AttackLength int      `yaml:"attack_length"`
+	MetricNexus  struct {
+		Host string `yaml:"host"`
+		Port int    `yaml:"port"`
+		Key  string `yaml:"key"`
+	} `yaml:"metric_nexus"`
 }
 
-func LoadConfig(file string) (*Config, error) {
+func LoadConfig(file string) error {
 	file, err := filepath.Abs(file)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if !fileExists(file) {
-		return nil, fmt.Errorf("file does not exist")
+		return fmt.Errorf("file does not exist")
 	}
 	c := &Config{
 		Host:      "",
@@ -33,22 +37,12 @@ func LoadConfig(file string) (*Config, error) {
 	}
 	b, err := os.ReadFile(file)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = yaml.Unmarshal(b, c)
-	return c, err
-}
-
-//go:embed services.yaml
-var servicesFile string
-
-type Services map[string]struct {
-	Ports  []int  `yaml:"ports"`
-	Banner string `yaml:"banner"`
-}
-
-func LoadServices() (*Services, error) {
-	s := &Services{}
-	err := yaml.Unmarshal([]byte(servicesFile), s)
-	return s, err
+	if err != nil {
+		return err
+	}
+	config = c
+	return nil
 }

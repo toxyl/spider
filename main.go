@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/toxyl/glog"
 )
 
 var (
-	log      = glog.NewLoggerSimple("Spider")
-	config   *Config
-	services *Services
-	stats    = NewStats()
+	log        = glog.NewLoggerSimple("Spider")
+	config     *Config
+	services   *Services
+	stats      *Stats
+	pathConfig string
 )
 
 func connInfo(conn net.Conn, action string) {
@@ -120,17 +122,22 @@ func main() {
 		return
 	}
 
-	s, err := LoadServices()
+	err := LoadServices()
 	if err != nil {
 		log.Error("Failed to load services: %s", glog.Error(err))
 	}
-	services = s
 
-	c, err := LoadConfig(os.Args[1])
+	pathConfig, err = filepath.Abs(os.Args[1])
+	if err != nil {
+		log.Error("Failed to generate absolute path for config: %s", glog.Error(err))
+	}
+
+	err = LoadConfig(pathConfig)
 	if err != nil {
 		log.Error("Failed to load config: %s", glog.Error(err))
 	}
-	config = c
+
+	stats = NewStats()
 
 	buildWebs()
 

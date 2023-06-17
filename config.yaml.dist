@@ -37,3 +37,8 @@ taunts:
   - "Your IP has been reported and you are being watched."
   - "I see you!"
 attack_length: 10 # in seconds
+metric_nexus:
+  host: 127.0.0.1
+  port: 4096
+  key: ThisIsAnUnsafeAPIKey
+  

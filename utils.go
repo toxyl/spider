@@ -17,6 +17,10 @@ var (
 	gen = gostringgenerator.NewGenerator("/etc/spider/data/", func(err error) {})
 )
 
+func getSpiderMetricName(spider int, section string) string {
+	return fmt.Sprintf("spider_%d_%s", spider, section)
+}
+
 // extractPort takes a "IP:Port" formatted string and returns the port as integer.
 // If extraction fails the function returns 0.
 func extractPort(ipv4Addr string) int {

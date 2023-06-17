@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/toxyl/glog"
+	metrics "github.com/toxyl/metric-nexus"
 )
 
 type Stats struct {
@@ -16,15 +17,25 @@ type Stats struct {
 	Kills                 map[int]int
 	Prey                  map[int]int
 	changedSinceLastPrint bool
+	client                *metrics.Client
 }
 
 func (s *Stats) AddSpider(spider int) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	s.Kills[spider] = 0
-	s.Prey[spider] = 0
+	k := 0
+	p := 0
+	t := 0.0
+	s.Kills[spider] = k
+	s.Prey[spider] = p
 	s.LastKill[spider] = time.Now()
-	s.TimeWasted[spider] = 0.0
+	s.TimeWasted[spider] = t
+
+	if s.client != nil {
+		s.client.Create(getSpiderMetricName(spider, "kills"), "Kills made by the spider.")
+		s.client.Create(getSpiderMetricName(spider, "prey"), "Prey being attacked by the spider.")
+		s.client.Create(getSpiderMetricName(spider, "time_wasted"), "Time wasted by the spider.")
+	}
 }
 
 func (s *Stats) AddKill(spider int, timeWasted float64) {
@@ -43,6 +54,12 @@ func (s *Stats) AddKill(spider int, timeWasted float64) {
 		s.Prey[spider] = 1
 	}
 	s.Prey[spider]--
+
+	if s.client != nil {
+		s.client.Increment(getSpiderMetricName(spider, "kills"))
+		s.client.Decrement(getSpiderMetricName(spider, "prey"))
+		s.client.Add(getSpiderMetricName(spider, "time_wasted"), timeWasted)
+	}
 }
 
 func (s *Stats) AddPrey(spider int) {
@@ -54,6 +71,10 @@ func (s *Stats) AddPrey(spider int) {
 		s.Prey[spider] = 0
 	}
 	s.Prey[spider]++
+
+	if s.client != nil {
+		s.client.Increment(getSpiderMetricName(spider, "prey"))
+	}
 }
 
 func (s *Stats) IsStarving(spider int) bool {
@@ -164,25 +185,25 @@ func (s *Stats) Print() {
 	log.Default(glog.Bold()+glog.Underline()+"Status Update"+glog.Reset()+" %s", glog.Time(time.Now()))
 	log.Table(colSpider, colAttacking, colWaiting, colStarving, colPrey, colKills, colTime, colTimeAvg)
 	log.Default(
-		"🪖 %s %s 🚬 %s %s 🍴 %s %s",
-		glog.PadLeft(glog.Int(totalAttacking), 4, ' '),
+		" 🪖 %s %s 🚬 %s %s 🍴 %s %s",
+		glog.PadLeft(glog.Int(totalAttacking), 5, ' '),
 		glog.PadRight(glog.Auto("attacking"), 10, ' '),
-		glog.PadLeft(glog.Int(totalWaiting), 4, ' '),
+		glog.PadLeft(glog.Int(totalWaiting), 5, ' '),
 		glog.PadRight(glog.Auto("waiting"), 10, ' '),
-		glog.PadLeft(glog.Int(totalStarving), 4, ' '),
+		glog.PadLeft(glog.Int(totalStarving), 5, ' '),
 		glog.PadRight(glog.Auto("starving"), 10, ' '),
 	)
 	log.Default(
-		"🤖 %s %s 🪰 %s %s 💀 %s %s",
-		glog.PadLeft(glog.Int(len(spiders)), 4, ' '),
+		" 🤖 %s %s 🪰 %s %s 💀 %s %s",
+		glog.PadLeft(glog.Int(len(spiders)), 5, ' '),
 		glog.PadRight(glog.Auto("spiders"), 10, ' '),
-		glog.PadLeft(glog.Int(totalPrey), 4, ' '),
+		glog.PadLeft(glog.Int(totalPrey), 5, ' '),
 		glog.PadRight(glog.Auto("prey"), 10, ' '),
-		glog.PadLeft(glog.Int(totalKills), 4, ' '),
+		glog.PadLeft(glog.Int(totalKills), 5, ' '),
 		glog.PadRight(glog.Auto("kills"), 10, ' '),
 	)
 	log.Default(
-		"              ⌛ %s %s",
+		"                 ⌛ %s %s",
 		glog.PadLeft(glog.DurationShort(timeWasted, glog.DURATION_SCALE_AVERAGE), 9, ' '),
 		glog.PadRight(glog.Auto("wasted"), 10, ' '),
 	)
@@ -200,6 +221,9 @@ func NewStats() *Stats {
 		Kills:                 map[int]int{},
 		Prey:                  map[int]int{},
 		changedSinceLastPrint: false,
+	}
+	if config.MetricNexus.Host != "" && config.MetricNexus.Key != "" {
+		s.client = metrics.NewClient(config.MetricNexus.Host, config.MetricNexus.Port, config.MetricNexus.Key, true)
 	}
 	return s
 }
