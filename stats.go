@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 	"time"
@@ -56,6 +58,7 @@ func (s *Stats) AddKill(spider int, timeWasted float64) {
 	s.Prey[spider]--
 
 	if s.client != nil {
+		fileWrite(filepath.Join(os.TempDir(), fmt.Sprintf(".spider-prey.%d", spider)), fmt.Sprint(s.Prey[spider]))
 		s.client.Increment(getSpiderMetricName(spider, "kills"))
 		s.client.Decrement(getSpiderMetricName(spider, "prey"))
 		s.client.Add(getSpiderMetricName(spider, "time_wasted"), timeWasted)
@@ -73,6 +76,7 @@ func (s *Stats) AddPrey(spider int) {
 	s.Prey[spider]++
 
 	if s.client != nil {
+		fileWrite(filepath.Join(os.TempDir(), fmt.Sprintf(".spider-prey.%d", spider)), fmt.Sprint(s.Prey[spider]))
 		s.client.Increment(getSpiderMetricName(spider, "prey"))
 	}
 }

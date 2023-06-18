@@ -11,28 +11,11 @@ import (
 )
 
 var (
-	log        = glog.NewLoggerSimple("Spider")
 	config     *Config
 	services   *Services
 	stats      *Stats
 	pathConfig string
 )
-
-func connInfo(conn net.Conn, action string) {
-	log.Info("%s spider %s prey %s", glog.Auto(conn2name(conn)), colorizeAction(action), glog.Auto(conn2prey(conn)))
-}
-
-func spiderInfo(spider int, action string, suffix string) {
-	log.Info("%s spider %s%s", glog.Auto(spider2name(spider)), colorizeAction(action), suffix)
-}
-
-func spiderNotOK(spider int, action string, suffix string) {
-	log.NotOK("%s spider %s%s", glog.Auto(spider2name(spider)), colorizeAction(action), suffix)
-}
-
-func randomTaunt() string {
-	return gen.Generate(randomStringFromList(config.Taunts...))
-}
 
 func attackPrey(conn net.Conn) {
 	spider := conn2spider(conn)
@@ -138,6 +121,19 @@ func main() {
 	}
 
 	stats = NewStats()
+
+	if stats.client != nil {
+		for _, spider := range config.Spiders {
+			f := filepath.Join(os.TempDir(), fmt.Sprintf(".spider-prey.%d", spider))
+			if v, err := fileRead(f); err == nil {
+				// we might have crashed, let's remove the prey since it has disappeared
+				stats.client.Subtract(getSpiderMetricName(spider, "prey"), v)
+				if err := fileDelete(f); err != nil {
+					panic("could not remove " + f + " because " + err.Error())
+				}
+			}
+		}
+	}
 
 	buildWebs()
 
