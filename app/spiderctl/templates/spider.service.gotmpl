@@ -4,10 +4,10 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
-Group=root
-ExecStart=/etc/spider/spider /etc/spider/config.yaml
-ExecReload=/etc/spider/spider /etc/spider/config.yaml
+User={{ .User }}
+Group={{ .Group }}
+ExecStart=sudo {{ .Executable }}
+ExecReload=sudo {{ .Executable }}
 Restart=on-failure
 RestartSec=1
 StandardOutput=journal

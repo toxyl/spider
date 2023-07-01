@@ -1,0 +1,2 @@
+#!/bin/bash
+CGO_ENABLED=0 go build -o /usr/local/bin/spiderctl -trimpath -C app/spiderctl/ .

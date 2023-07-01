@@ -1,0 +1,43 @@
+package main
+
+type Config struct {
+	Host         string 
+	Spiders      []int  
+	Taunts       []string 
+	Whitelist    []string 
+	AttackLength int
+	MetricNexus  struct {
+		Host string
+		Port int
+		Key  string
+	}
+}
+
+var (
+	config = &Config{
+		Host:         "0.0.0.0",
+		Spiders:      []int{
+            {{ range $s := .Spiders }}{{$s}},
+            {{end}}
+        },
+		Taunts:       []string{
+            {{ range $s := .Taunts }}"{{$s}}",
+            {{end}}       
+        },
+		Whitelist:    []string{
+            {{ range $s := .Whitelist }}"{{$s}}",
+            {{end}}       
+        },
+		AttackLength: {{ .AttackLength }},
+		MetricNexus: struct {
+			Host string
+			Port int
+			Key  string
+		}{
+            Host: "{{ .MetricNexusHost }}",
+            Port: {{ .MetricNexusPort }},
+            Key: "{{ .MetricNexusKey }}",
+
+        },
+	}
+)

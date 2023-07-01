@@ -1,0 +1,24 @@
+package main
+
+type Config struct {
+	Host      string
+	Port      int
+	StateFile string
+	CertFile  string
+	KeyFile   string
+	APIKeys   []string
+}
+
+var (
+	config = &Config{
+		Host:      "{{ .Host }}",
+		Port:      {{ .Port }},
+		StateFile: "{{ .StateFile }}",
+        CertFile:  "{{ .CertFile }}",
+		KeyFile:   "{{ .KeyFile }}",
+		APIKeys:   []string{
+            {{ range $s := .APIKeys }}"{{$s}}",
+            {{end}}       
+        },
+	}
+)

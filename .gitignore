@@ -1,1 +1,3 @@
-config.yaml
+app/nexus-server/config.go
+app/spider/config.go
+inventory.yaml
