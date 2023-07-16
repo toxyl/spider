@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/toxyl/glog"
+	"github.com/toxyl/spider/log"
 )
 
 func sshExec(host string, args ...string) error {
@@ -59,7 +62,12 @@ func sshMkdir(host, dir string) error {
 }
 
 func sshRm(host, file string) error {
-	return sshExec(host, "sudo rm", "-rf", file)
+	log.Info("Removing %s on %s...", glog.File(file), glog.Auto(host))
+	err := sshExec(host, "sudo rm", "-rf", file)
+	if err != nil {
+		log.Error("Could not remove %s on %s...", glog.File(file), glog.Auto(host))
+	}
+	return nil
 }
 
 func sshServiceEnable(host, service string) error {

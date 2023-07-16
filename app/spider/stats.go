@@ -2,9 +2,12 @@ package main
 
 import (
 	"os"
+	"strings"
 	"sync"
 
+	"github.com/toxyl/glog"
 	metrics "github.com/toxyl/metric-nexus"
+	"github.com/toxyl/spider/log"
 	stats "github.com/toxyl/spider/stats"
 	"github.com/toxyl/spider/utils"
 )
@@ -18,14 +21,21 @@ type Stats struct {
 func (s *Stats) AddHost() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	fHostRegistered := utils.GetMetricFileName(0, "hosts")
+	file := utils.GetMetricFileName(0, "hosts")
+	hdir, err := os.UserHomeDir()
+	if err != nil {
+		log.Error("Failed to get user home dir for %s: %s", glog.File(file), glog.Error(err))
+	}
+	file = strings.ReplaceAll(file, "~/", hdir+"/")
 
-	met := utils.GetMetricName(0, "hosts")
-	s.client.Create(met, "How many hosts handle this port.")
-
-	if !utils.FileExists(fHostRegistered) {
+	if !utils.FileExists(file) {
+		met := utils.GetMetricName(0, "hosts")
+		s.client.Create(met, "How many hosts handle this port.")
 		s.client.Add(met, 1)
-		_ = os.WriteFile(fHostRegistered, []byte{'1'}, 0644)
+		err := os.WriteFile(file, []byte{'1'}, 0644)
+		if err != nil {
+			log.Error("Failed to create %s: %s", glog.File(file), glog.Error(err))
+		}
 	}
 }
 

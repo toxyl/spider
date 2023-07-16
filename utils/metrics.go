@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 )
 
@@ -14,10 +13,5 @@ func GetMetricName(spider int, section string) string {
 }
 
 func GetMetricFileName(spider int, section string) string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		home = os.TempDir()
-	}
-
-	return filepath.Join(home, fmt.Sprintf("spider-%s.%d", section, spider))
+	return filepath.Join("~", fmt.Sprintf("spider-%s.%d", section, spider))
 }
