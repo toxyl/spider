@@ -12,7 +12,7 @@ func taskResetSpider(host string) error {
 		_ = inventory.client.Update(utils.GetMetricName(s, "active"), 0)
 		_ = sshRm(host, utils.GetMetricFileName(s, "prey"))
 	}
-	_ = sshRm(host, utils.GetMetricFileName(0, "active"))
+	_ = sshRm(host, utils.GetMetricFileName(0, "hosts"))
 	_ = inventory.client.Update(utils.GetMetricName(0, "uptime"), 0)
 	_ = inventory.client.Update(utils.GetMetricName(0, "hosts"), 0)
 	return nil

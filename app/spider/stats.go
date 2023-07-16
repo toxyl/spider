@@ -18,7 +18,7 @@ type Stats struct {
 func (s *Stats) AddHost() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	fHostRegistered := utils.GetMetricFileName(0, "active")
+	fHostRegistered := utils.GetMetricFileName(0, "hosts")
 
 	met := utils.GetMetricName(0, "hosts")
 	s.client.Create(met, "How many hosts handle this port.")

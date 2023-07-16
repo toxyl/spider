@@ -14,5 +14,10 @@ func GetMetricName(spider int, section string) string {
 }
 
 func GetMetricFileName(spider int, section string) string {
-	return filepath.Join(os.TempDir(), fmt.Sprintf("spider-%s.%d", section, spider))
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = os.TempDir()
+	}
+
+	return filepath.Join(home, fmt.Sprintf("spider-%s.%d", section, spider))
 }
