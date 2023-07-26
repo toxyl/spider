@@ -12,7 +12,7 @@ import (
 
 func scpUpload(host, fileSrc, fileDst string) (string, error) {
 	cmd := exec.Command(
-		"scp",
+		"/usr/bin/scp",
 		"-i", inventory.Credentials.Key,
 		"-C", fileSrc,
 		fmt.Sprintf("%s@%s:%s", inventory.Credentials.User, host, fileDst),

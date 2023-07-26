@@ -42,9 +42,9 @@ func Int(min, max int) int {
 	return rand.Intn(n) + min
 }
 
-// GenerateGarbage produces a string (length is randomly chosen between 1 and `n`)
+// Garbage produces a string (length is randomly chosen between 1 and `n`)
 // consisting of random (non)-printable characters.
-func GenerateGarbage(n int) string {
+func Garbage(n int) string {
 	garbage := make([]byte, Int(1, n))
 	rand.Read(garbage)
 	return string(garbage)

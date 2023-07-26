@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/toxyl/glog"
@@ -24,7 +25,6 @@ func attackPrey(conn net.Conn) {
 	timeAttackStart := time.Now()
 	timeAttackEnd := timeAttackStart.Add(time.Duration(config.AttackLength) * time.Second)
 
-	SpiderPreyInfo(conn, "pokes")
 	statistics.AddPrey(spider)
 	defer func(conn net.Conn) {
 		if conn != nil {
@@ -35,6 +35,7 @@ func attackPrey(conn net.Conn) {
 		}
 		statistics.AddKill(spider, float64(time.Now().Unix()-timeAttackStart.Unix()))
 	}(conn)
+	SpiderPreyInfo(conn, "pokes")
 	err := utils.ConnWrite(conn, services.Conn2banner(conn)+random.Linebreak()) // we first send a "proper" banner
 	if err != nil {
 		return
@@ -43,11 +44,15 @@ func attackPrey(conn net.Conn) {
 
 	SpiderPreyInfo(conn, "attacks")
 	for timeAttackEnd.After(time.Now()) {
-		err = utils.ConnWrite(conn, random.GenerateGarbage(10000))
+		err = utils.ConnWrite(conn, random.Garbage(10000))
 		if err != nil {
 			return
 		}
-		time.Sleep(time.Duration(random.Int(1, 5)) * time.Second)
+		t := random.Int(1, 5)
+		if t == 3 { // i.e. 1 in 5 chance to insert a linebreak
+			_ = utils.ConnWrite(conn, random.Linebreak())
+		}
+		time.Sleep(time.Duration(t) * time.Second)
 	}
 }
 
@@ -75,7 +80,7 @@ func buildWebs() {
 				if err != nil {
 					SpiderPreyInfo(conn, "fails to catch")
 					log.Error("%s", glog.Error(err))
-					conn.Close()
+					_ = conn.Close()
 					continue
 				}
 				host := services.Host(conn.RemoteAddr())
@@ -88,7 +93,7 @@ func buildWebs() {
 				}
 				if isWhitelisted {
 					SpiderPreyInfo(conn, "avoids")
-					conn.Close()
+					_ = conn.Close()
 					continue
 				}
 				go catchPrey(conn)
@@ -117,13 +122,33 @@ func init() {
 	random.Taunts = config.Taunts
 }
 
-func trackUptime() {
+func getMemoryUsage() (alloc, sys, heapAlloc, heapSys int) {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return int(m.Alloc), int(m.Sys), int(m.HeapAlloc), int(m.HeapSys)
+}
+
+func trackUptimeAndMemoryUsage() {
 	client := metrics.NewClient(config.MetricNexus.Host, config.MetricNexus.Port, config.MetricNexus.Key, true)
 	client.Create(utils.GetMetricName(0, "uptime"), "How long the cluster has been online. Note that this is the sum of all nodes.")
+	client.Create(utils.GetMetricName(0, "mem_alloc"), "How much memory the cluster actively uses. Note that this is the sum of all nodes.")
+	client.Create(utils.GetMetricName(0, "mem_sys"), "How much memory the cluster has requested from the OS. Note that this is the sum of all nodes.")
+	client.Create(utils.GetMetricName(0, "mem_heap_alloc"), "How much heap memory the cluster actively uses. Note that this is the sum of all nodes.")
+	client.Create(utils.GetMetricName(0, "mem_heap_sys"), "How much heap memory the cluster has requested from the OS. Note that this is the sum of all nodes.")
 
 	t := time.Now()
+	lastAlloc, lastSys, lastHeapAlloc, lastHeapSys := getMemoryUsage()
 	for {
 		time.Sleep(10 * time.Second)
+		alloc, sys, heapAlloc, heapSys := getMemoryUsage()
+		client.Add(utils.GetMetricName(0, "mem_alloc"), alloc-lastAlloc)
+		client.Add(utils.GetMetricName(0, "mem_sys"), sys-lastSys)
+		client.Add(utils.GetMetricName(0, "mem_heap_alloc"), heapAlloc-lastHeapAlloc)
+		client.Add(utils.GetMetricName(0, "mem_heap_sys"), heapSys-lastHeapSys)
+		lastAlloc = alloc
+		lastSys = sys
+		lastHeapAlloc = heapAlloc
+		lastHeapSys = heapSys
 		client.Add(utils.GetMetricName(0, "uptime"), time.Since(t).Seconds())
 		t = time.Now()
 	}
@@ -133,5 +158,5 @@ func main() {
 	statistics = NewStats()
 	statistics.AddHost()
 	buildWebs()
-	trackUptime()
+	trackUptimeAndMemoryUsage()
 }
