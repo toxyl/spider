@@ -156,7 +156,6 @@ func trackUptimeAndMemoryUsage() {
 
 func main() {
 	statistics = NewStats()
-	statistics.AddHost()
 	buildWebs()
 	trackUptimeAndMemoryUsage()
 }
